@@ -12,11 +12,14 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing Python dependencies...'
+                echo 'Installing Python dependencies in venv...'
                 sh '''
-                   python3 --version
-                   pip3 install --upgrade pip
-                   pip3 install -r requirements.txt
+                    python3 --version
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    python -m pip install --upgrade pip
+                    pip install -r requirements.txt
+                    pip install pytest
                 '''
             }
         }
@@ -25,7 +28,9 @@ pipeline {
             steps {
                 echo 'Running unit tests...'
                 sh '''
-                   pytest --junitxml=results.xml
+                    . venv/bin/activate
+                    mkdir -p test-reports
+                    pytest --junitxml=test-reports/results.xml
                 '''
             }
         }
@@ -36,7 +41,7 @@ pipeline {
             echo 'Python CI Pipeline completed successfully!'
         }
         always {
-            junit 'results.xml'
+            junit allowEmptyResults: true, testResults: 'test-reports/results.xml'
         }
         failure {
             echo 'Pipeline failed. Please check logs.'
