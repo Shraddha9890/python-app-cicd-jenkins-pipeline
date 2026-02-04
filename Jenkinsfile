@@ -32,7 +32,9 @@ pipeline {
                 sh '''
                     set -e
                     mkdir -p test-reports
-                    pytest -q --junitxml=test-reports/results.xml
+
+                    # Run pytest via Python module (avoids PATH issue)
+                    python3 -m pytest -q --junitxml=test-reports/results.xml
                 '''
             }
         }
