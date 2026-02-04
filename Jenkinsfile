@@ -11,12 +11,16 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing Python dependencies (system pip override)...'
+                echo 'Installing Python dependencies...'
                 sh '''
+                    set -e
                     python3 --version
                     pip3 --version
-                    pip3 install --break-system-packages --upgrade pip
+
+                    # Install project requirements (PEP 668 safe override)
                     pip3 install --break-system-packages -r requirements.txt
+
+                    # Ensure pytest is available even if not in requirements
                     pip3 install --break-system-packages pytest
                 '''
             }
@@ -26,8 +30,9 @@ pipeline {
             steps {
                 echo 'Running unit tests...'
                 sh '''
+                    set -e
                     mkdir -p test-reports
-                    pytest --junitxml=test-reports/results.xml
+                    pytest -q --junitxml=test-reports/results.xml
                 '''
             }
         }
