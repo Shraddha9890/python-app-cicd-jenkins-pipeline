@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo 'Checking out source code...'
@@ -12,14 +11,13 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing Python dependencies in venv...'
+                echo 'Installing Python dependencies (system pip override)...'
                 sh '''
                     python3 --version
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    python -m pip install --upgrade pip
-                    pip install -r requirements.txt
-                    pip install pytest
+                    pip3 --version
+                    pip3 install --break-system-packages --upgrade pip
+                    pip3 install --break-system-packages -r requirements.txt
+                    pip3 install --break-system-packages pytest
                 '''
             }
         }
@@ -28,7 +26,6 @@ pipeline {
             steps {
                 echo 'Running unit tests...'
                 sh '''
-                    . venv/bin/activate
                     mkdir -p test-reports
                     pytest --junitxml=test-reports/results.xml
                 '''
@@ -37,11 +34,11 @@ pipeline {
     }
 
     post {
-        success {
-            echo 'Python CI Pipeline completed successfully!'
-        }
         always {
             junit allowEmptyResults: true, testResults: 'test-reports/results.xml'
+        }
+        success {
+            echo 'Python CI Pipeline completed successfully!'
         }
         failure {
             echo 'Pipeline failed. Please check logs.'
